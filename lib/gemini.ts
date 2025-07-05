@@ -80,6 +80,21 @@ export async function chatWithAI(
       }
     });
 
+
+    // Suggest Indian plants based on climate or region
+export function getIndianPlantSuggestions(region: string): string[] {
+  const suggestions: Record<string, string[]> = {
+    'north': ['Tulsi', 'Neem', 'Peepal'],
+    'south': ['Coconut', 'Banana', 'Betel Leaf'],
+    'east': ['Bamboo', 'Jute', 'Areca Palm'],
+    'west': ['Aloe Vera', 'Cactus', 'Bougainvillea'],
+    'central': ['Mango', 'Guava', 'Jackfruit']
+  };
+
+  const key = region.toLowerCase();
+  return suggestions[key] || ['Tulsi', 'Neem', 'Aloe Vera']; // default fallback
+}
+
     // Format and clean history
     const formattedHistory: any[] = [];
     let lastRole: "user" | "model" = "model";
