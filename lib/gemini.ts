@@ -12,7 +12,21 @@ function processImageData(image: string): { data: string; mimeType: string } {
   return { data: image, mimeType: "image/jpeg" };
 }
 
-// Identify plant
+// ✅ MOVE THIS OUTSIDE
+export function getIndianPlantSuggestions(region: string): string[] {
+  const suggestions: Record<string, string[]> = {
+    north: ["Tulsi", "Neem", "Peepal"],
+    south: ["Coconut", "Banana", "Betel Leaf"],
+    east: ["Bamboo", "Jute", "Areca Palm"],
+    west: ["Aloe Vera", "Cactus", "Bougainvillea"],
+    central: ["Mango", "Guava", "Jackfruit"],
+  };
+
+  const key = region.toLowerCase();
+  return suggestions[key] || ["Tulsi", "Neem", "Aloe Vera"]; // default
+}
+
+// 🌿 Identify plant
 export async function identifyPlant(image: string): Promise<string> {
   try {
     const { data, mimeType } = processImageData(image);
@@ -20,12 +34,12 @@ export async function identifyPlant(image: string): Promise<string> {
 
     const result = await model.generateContent([
       "Identify the plant in this image. Provide common name, scientific name, and basic care tips.",
-      { 
-        inlineData: { 
-          data, 
-          mimeType 
-        } 
-      }
+      {
+        inlineData: {
+          data,
+          mimeType,
+        },
+      },
     ]);
 
     return (await result.response).text();
@@ -39,7 +53,7 @@ export async function identifyPlant(image: string): Promise<string> {
   }
 }
 
-// Detect plant disease
+// 🌱 Detect plant disease
 export async function detectDisease(image: string): Promise<string> {
   try {
     const { data, mimeType } = processImageData(image);
@@ -47,12 +61,12 @@ export async function detectDisease(image: string): Promise<string> {
 
     const result = await model.generateContent([
       "Detect any plant diseases or problems visible in this image. Provide diagnosis and treatment suggestions.",
-      { 
-        inlineData: { 
-          data, 
-          mimeType 
-        } 
-      }
+      {
+        inlineData: {
+          data,
+          mimeType,
+        },
+      },
     ]);
 
     return (await result.response).text();
@@ -66,7 +80,7 @@ export async function detectDisease(image: string): Promise<string> {
   }
 }
 
-// Chat with Gemini AI
+// 🤖 Chat with Gemini AI
 export async function chatWithAI(
   message: string,
   history: Array<{ role: "user" | "model"; content: string }> = []
@@ -76,26 +90,10 @@ export async function chatWithAI(
       model: "gemini-1.5-flash",
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 1000
-      }
+        maxOutputTokens: 1000,
+      },
     });
 
-
-    // Suggest Indian plants based on climate or region
-export function getIndianPlantSuggestions(region: string): string[] {
-  const suggestions: Record<string, string[]> = {
-    'north': ['Tulsi', 'Neem', 'Peepal'],
-    'south': ['Coconut', 'Banana', 'Betel Leaf'],
-    'east': ['Bamboo', 'Jute', 'Areca Palm'],
-    'west': ['Aloe Vera', 'Cactus', 'Bougainvillea'],
-    'central': ['Mango', 'Guava', 'Jackfruit']
-  };
-
-  const key = region.toLowerCase();
-  return suggestions[key] || ['Tulsi', 'Neem', 'Aloe Vera']; // default fallback
-}
-
-    // Format and clean history
     const formattedHistory: any[] = [];
     let lastRole: "user" | "model" = "model";
 
@@ -105,16 +103,15 @@ export function getIndianPlantSuggestions(region: string): string[] {
       if (currentRole === lastRole) continue;
       formattedHistory.push({
         role: currentRole,
-        parts: [{ text: msg.content }]
+        parts: [{ text: msg.content }],
       });
       lastRole = currentRole;
     }
 
-    // Ensure conversation starts with user
     if (formattedHistory.length > 0 && formattedHistory[0].role !== "user") {
       formattedHistory.unshift({
         role: "user",
-        parts: [{ text: "Start the conversation" }]
+        parts: [{ text: "Start the conversation" }],
       });
     }
 
@@ -124,7 +121,9 @@ export function getIndianPlantSuggestions(region: string): string[] {
   } catch (error) {
     console.error("Chat error:", error);
     throw new Error(
-      `Chat failed: ${error instanceof Error ? error.message : "Unknown error"}`
+      `Chat failed: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
     );
   }
 }
