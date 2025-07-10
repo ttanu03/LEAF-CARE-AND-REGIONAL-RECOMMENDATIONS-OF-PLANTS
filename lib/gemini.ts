@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-// Helper to process base64 image string
+// Helper to process base64 image string (UNCHANGED)
 function processImageData(image: string): { data: string; mimeType: string } {
   if (image.startsWith("data:image")) {
     const [meta, base64Data] = image.split(",");
@@ -12,28 +12,80 @@ function processImageData(image: string): { data: string; mimeType: string } {
   return { data: image, mimeType: "image/jpeg" };
 }
 
-// ✅ MOVE THIS OUTSIDE
-export function getIndianPlantSuggestions(region: string): string[] {
-  const suggestions: Record<string, string[]> = {
-    north: ["Tulsi", "Neem", "Peepal"],
-    south: ["Coconut", "Banana", "Betel Leaf"],
-    east: ["Bamboo", "Jute", "Areca Palm"],
-    west: ["Aloe Vera", "Cactus", "Bougainvillea"],
-    central: ["Mango", "Guava", "Jackfruit"],
-  };
+// ✅ FIXED FUNCTION: Get plant suggestions for a region
+export async function getIndianPlantSuggestions(region: string): Promise<
+  {
+    name: string;
+    scientificName: string;
+    description: string;
+  }[]
+> {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-  const key = region.toLowerCase();
-  return suggestions[key] || ["Tulsi", "Neem", "Aloe Vera"]; // default
+    const prompt = `
+You are a bot that recommends plants suitable for specific regions in India based on climate and geography.
+
+Provide a list of 5 suitable plants for the region: "${region}". 
+Return only valid JSON in the following format:
+[
+  {
+    "name": "Common name",
+    "scientificName": "Scientific name",
+    "description": "Short description (1-2 sentences)"
+  }
+]
+
+Do NOT include any markdown or extra commentary. Just raw JSON.
+`;
+
+    const result = await model.generateContent(prompt);
+    const text = (await result.response).text();
+
+    // ✅ Clean markdown wrapping if Gemini returns it
+    const cleaned = text.trim()
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/```$/, "");
+
+    return JSON.parse(cleaned);
+  } catch (error) {
+    console.error("Plant suggestion error:", error);
+    throw new Error(
+      `getIndianPlantSuggestions failed: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
+  }
 }
 
-// 🌿 Identify plant
+// identifyPlant (UNCHANGED)
 export async function identifyPlant(image: string): Promise<string> {
   try {
     const { data, mimeType } = processImageData(image);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
+    const prompt = `
+Analyze this plant image and provide response in this EXACT format:
+{
+  "name": "Common name (e.g., 'Rose')",
+  "scientificName": "Scientific name (e.g., 'Rosa rubiginosa')",
+  "description": "Brief description (1-2 sentences)",
+  "careTips": ["array", "of", "specific", "care", "tips"],
+  "problems": ["common", "problems", "if", "visible"],
+  "confidence": 0.0-1.0
+}
+
+Rules:
+1. Only return valid JSON, no additional text
+2. If uncertain, use "Unknown" for text fields
+3. confidence should reflect your certainty
+4. Include only visible problems in problems array
+5. Do not include any markdown syntax (no backticks)
+`;
+
     const result = await model.generateContent([
-      "Identify the plant in this image. Provide common name, scientific name, and basic care tips.",
+      prompt,
       {
         inlineData: {
           data,
@@ -53,7 +105,7 @@ export async function identifyPlant(image: string): Promise<string> {
   }
 }
 
-// 🌱 Detect plant disease
+// detectDisease (UNCHANGED)
 export async function detectDisease(image: string): Promise<string> {
   try {
     const { data, mimeType } = processImageData(image);
@@ -80,7 +132,7 @@ export async function detectDisease(image: string): Promise<string> {
   }
 }
 
-// 🤖 Chat with Gemini AI
+// chatWithAI (UNCHANGED)
 export async function chatWithAI(
   message: string,
   history: Array<{ role: "user" | "model"; content: string }> = []
@@ -94,6 +146,7 @@ export async function chatWithAI(
       },
     });
 
+    // Format and clean history
     const formattedHistory: any[] = [];
     let lastRole: "user" | "model" = "model";
 
@@ -108,6 +161,7 @@ export async function chatWithAI(
       lastRole = currentRole;
     }
 
+    // Ensure conversation starts with user
     if (formattedHistory.length > 0 && formattedHistory[0].role !== "user") {
       formattedHistory.unshift({
         role: "user",
@@ -121,9 +175,7 @@ export async function chatWithAI(
   } catch (error) {
     console.error("Chat error:", error);
     throw new Error(
-      `Chat failed: ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`
+      `Chat failed: ${error instanceof Error ? error.message : "Unknown error"}`
     );
   }
 }
