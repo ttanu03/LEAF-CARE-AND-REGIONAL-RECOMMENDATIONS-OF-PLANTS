@@ -21,11 +21,7 @@ export async function getIndianPlantSuggestions(region: string): Promise<
   }[]
 > {
   try {
-<<<<<<< HEAD
     const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
-=======
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
->>>>>>> f8d6ed51a3b9e3ad68b31a06bef8b5d41f08a0db
 
     const prompt = `
 You are a bot that recommends plants suitable for specific regions in India based on climate and geography.
@@ -67,11 +63,7 @@ Do NOT include any markdown or extra commentary. Just raw JSON.
 export async function identifyPlant(image: string): Promise<string> {
   try {
     const { data, mimeType } = processImageData(image);
-<<<<<<< HEAD
     const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
-=======
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
->>>>>>> f8d6ed51a3b9e3ad68b31a06bef8b5d41f08a0db
 
     const prompt = `
 Analyze this plant image and provide response in this EXACT format:
@@ -117,11 +109,7 @@ Rules:
 export async function detectDisease(image: string): Promise<string> {
   try {
     const { data, mimeType } = processImageData(image);
-<<<<<<< HEAD
     const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
-=======
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
->>>>>>> f8d6ed51a3b9e3ad68b31a06bef8b5d41f08a0db
 
     const result = await model.generateContent([
       "Detect any plant diseases or problems visible in this image. Provide diagnosis and treatment suggestions.",
@@ -151,11 +139,7 @@ export async function chatWithAI(
 ): Promise<string> {
   try {
     const model = genAI.getGenerativeModel({
-<<<<<<< HEAD
-      model: "gemini-2.5-flash",
-=======
-      model: "gemini-1.5-flash",
->>>>>>> f8d6ed51a3b9e3ad68b31a06bef8b5d41f08a0db
+      model: "gemini-3.5-flash",
       generationConfig: {
         temperature: 0.7,
         maxOutputTokens: 1000,
