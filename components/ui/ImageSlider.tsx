@@ -14,11 +14,7 @@ const images: string[] = [
   '/assets/48.webp',
   '/assets/29.jpg',
   '/assets/one.jpg',
-<<<<<<< HEAD
   '/assets/new.webp',
-=======
-  '/assets/new.webp'
->>>>>>> f8d6ed51a3b9e3ad68b31a06bef8b5d41f08a0db
 ];
 
 export default function ImageSlider(): JSX.Element {
@@ -47,11 +43,7 @@ export default function ImageSlider(): JSX.Element {
   return (
     <div className="relative bg-netural-50 text-white h-[500px] w-full flex items-center justify-center overflow-hidden">
       <div className="absolute top-10 left-10 text-green-700 text-4xl ">
-<<<<<<< HEAD
         
-=======
-        LeafCare 
->>>>>>> f8d6ed51a3b9e3ad68b31a06bef8b5d41f08a0db
       </div>
 
       <div

@@ -1,12 +1,6 @@
-<<<<<<< HEAD
 import type { Config } from "tailwindcss"
 
 const config = {
-=======
-import type { Config } from "tailwindcss";
-
-const config: Config = {
->>>>>>> f8d6ed51a3b9e3ad68b31a06bef8b5d41f08a0db
   darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",

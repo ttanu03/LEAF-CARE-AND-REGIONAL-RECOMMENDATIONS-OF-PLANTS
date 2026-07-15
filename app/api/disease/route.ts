@@ -1,19 +1,9 @@
-<<<<<<< HEAD
 import { NextResponse } from 'next/server';
 import { detectDisease } from '@/lib/gemini';
 
 export async function POST(request: Request) {
   try {
     const { image } = await request.json();
-=======
-// app/api/disease/route.ts
-import { NextResponse } from 'next/server';
-import { detectDisease } from '@/lib/gemini';
-
-export async function POST(req: Request) {
-  try {
-    const { image } = await req.json();
->>>>>>> f8d6ed51a3b9e3ad68b31a06bef8b5d41f08a0db
     
     if (!image) {
       return NextResponse.json(
@@ -21,7 +11,6 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-<<<<<<< HEAD
 
     const diseaseText = await detectDisease(image);
     console.log("Raw disease detection response:", diseaseText);
@@ -150,23 +139,4 @@ function extractDiseaseInfo(text: string) {
   }
 
   return diseaseInfo;
-=======
-    
-    const result = await detectDisease(image);
-    return NextResponse.json(result, { status: 200 });
-    
-  } catch (error: unknown) {
-    console.error("Detection error:", error);
-    
-    let errorMessage = "Detection failed";
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    }
-    
-    return NextResponse.json(
-      { error: "Detection failed", details: errorMessage },
-      { status: 500 }
-    );
-  }
->>>>>>> f8d6ed51a3b9e3ad68b31a06bef8b5d41f08a0db
 }

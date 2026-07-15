@@ -1,16 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-<<<<<<< HEAD
 
 body {
   font-family: Arial, Helvetica, sans-serif;
-=======
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@10');
-
-body {
-  font-family:Outfit, sans-serif ;
->>>>>>> f8d6ed51a3b9e3ad68b31a06bef8b5d41f08a0db
 }
 
 @layer utilities {
