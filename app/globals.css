@@ -1,6 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> f8d6ed51a3b9e3ad68b31a06bef8b5d41f08a0db
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -60,4 +63,13 @@
     @apply font-roboto;
   }
 
+<<<<<<< HEAD
 }
+=======
+}
+
+
+
+
+
+>>>>>>> f8d6ed51a3b9e3ad68b31a06bef8b5d41f08a0db

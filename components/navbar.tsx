@@ -6,8 +6,13 @@ export default function Navbar() {
     <header className="bg-green-700 text-white shadow-md">
       <div className="container mx-auto px-4 py-3 flex justify-content items-center">
         
+<<<<<<< HEAD
         <Link href="/" className="flex gap-2 text-xl font-bold italic">
           <Leaf className="h-7 w-7" />
+=======
+        <Link href="/" className="flex  gap-2 text-xl font-bold italic">
+          <Leaf className="h-5 w-5" />
+>>>>>>> f8d6ed51a3b9e3ad68b31a06bef8b5d41f08a0db
           <span>Plantopedia</span>
         </Link>
        
