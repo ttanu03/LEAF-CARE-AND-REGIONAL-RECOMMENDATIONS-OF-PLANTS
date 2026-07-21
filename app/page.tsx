@@ -31,7 +31,7 @@ export default function Home() {
           </Link>
           <Link href="/suggestions">
             <Button
-              variant="outline"
+            
               className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-lg px-6 py-6"
             >
               Get Plant Suggestions

@@ -1,208 +1,206 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Camera, MessageSquare, Leaf } from "lucide-react";
-import ImageSlider from "@/components/ui/ImageSlider";
+"use client"
 
-export default function Home() {
+import { useState } from "react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import ImageUpload from "@/components/image-upload"
+import PlantInfoCard from "@/components/plant-info-card"
+import DiseaseInfoCard from "@/components/disease-info-card"
+import ChatInterface from "@/components/chat-interface"
+import { Loader2 } from "lucide-react"
+
+type PlantInfo = {
+  name?: string
+  scientificName?: string
+  description?: string
+  careTips?: string[]
+  problems?: string[]
+  confidence?: number
+  error?: string
+  suggestions?: string[]
+}
+
+type DiseaseInfo = {
+  name?: string
+  description?: string
+  treatment?: string[]
+  prevention?: string[]
+  confidence?: number
+  error?: string
+  suggestions?: string[]
+}
+
+export default function IdentifyPage() {
+  const [capturedImage, setCapturedImage] = useState<string | null>(null)
+  const [plantInfo, setPlantInfo] = useState<PlantInfo | null>(null)
+  const [diseaseInfo, setDiseaseInfo] = useState<DiseaseInfo | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState("identify")
+
+  const handleImageCapture = async (imageData: string) => {
+    setCapturedImage(imageData)
+    setPlantInfo(null)
+    setDiseaseInfo(null)
+    setError(null)
+    setIsProcessing(true)
+
+    try {
+      if (!imageData || !imageData.startsWith("data:image")) {
+        throw new Error("Invalid image format. Please upload a valid image.")
+      }
+
+      // Timeout after 15 seconds
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 15000)
+
+      const [identifyRes, diseaseRes] = await Promise.all([
+        fetch("/api/identify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: imageData }),
+          signal: controller.signal
+        }),
+        fetch("/api/disease", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: imageData }),
+          signal: controller.signal
+        })
+      ])
+
+      clearTimeout(timeoutId)
+
+      const processResponse = async (res: Response) => {
+        if (!res.ok) {
+          const error = await res.text()
+          throw new Error(error || "Request failed")
+        }
+        return await res.json()
+      }
+
+      const [plantData, diseaseData] = await Promise.all([
+        processResponse(identifyRes),
+        processResponse(diseaseRes)
+      ])
+
+      setPlantInfo({
+        name: plantData.name,
+        scientificName: plantData.scientificName,
+        description: plantData.description,
+        careTips: plantData.careTips,
+        problems: plantData.problems,
+        confidence: plantData.confidence
+      })
+
+      setDiseaseInfo({
+        name: diseaseData.name,
+        description: diseaseData.description,
+        treatment: diseaseData.treatment,
+        prevention: diseaseData.prevention,
+        confidence: diseaseData.confidence
+      })
+
+    } catch (err) {
+      console.error("Error:", err)
+      const errorMessage = err instanceof Error ? err.message : "An unknown error occurred"
+      setError(errorMessage)
+
+      setPlantInfo({
+        error: errorMessage,
+        suggestions: [
+          "Try a different photo angle",
+          "Ensure good lighting",
+          "Make sure the plant is clearly visible"
+        ]
+      })
+
+      setDiseaseInfo({
+        error: errorMessage,
+        suggestions: [
+          "Check for visible symptoms",
+          "Take a closer photo of affected areas",
+          "Try again with better lighting"
+        ]
+      })
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 overflow-x-hidden">
+    <div className="container mx-auto px-4 py-8 overflow-x-hidden">
+      <h1 className="text-2xl sm:text-3xl font-bold text-green-800 mb-8 text-center">
+        Plant Identification & Disease Detection
+      </h1>
 
-      {/* Hero Section */}
-      <section className="text-center mb-16">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-green-800 leading-tight">
-          Leaf Care and Regional Recommendation of Plant
-        </h1>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div className="space-y-4 min-w-0">
+          <h2 className="text-lg sm:text-xl font-semibold text-green-700">
+            Upload or Take a Photo
+          </h2>
+          <ImageUpload onImageCapture={handleImageCapture} disabled={isProcessing} />
 
-        <h3 className="mt-6 text-xl sm:text-2xl md:text-3xl font-bold text-green-700 text-center italic">
-          A Guide to Thriving Greenary for Every Region
-        </h3>
+          {isProcessing && (
+            <div className="flex items-center gap-2 text-green-700">
+              <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+              <span>Analyzing your plant...</span>
+            </div>
+          )}
 
-        <p className="mt-6 text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-          Upload a photo of any plant to instantly identify it, detect diseases, and get care recommendations.
-          Specialized for Indian plants and growing conditions.
-        </p>
-
-        <div className="flex flex-wrap justify-center gap-4">
-          <Link href="/identify">
-            <Button className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-lg px-6 py-6">
-              Identify a Plant
-            </Button>
-          </Link>
-          <Link href="/suggestions">
-            <Button
-              variant="outline"
-              className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-lg px-6 py-6"
-            >
-              Get Plant Suggestions
-            </Button>
-          </Link>
+          {capturedImage && (
+            <div className="mt-4">
+              <img
+                src={capturedImage}
+                alt="Captured plant"
+                className="w-full max-w-full h-auto max-h-64 object-contain rounded-lg border border-gray-200"
+              />
+            </div>
+          )}
         </div>
-      </section>
 
-      <main>
-        <ImageSlider />
-      </main>
-
-      {/* Features Section */}
-      <section className="my-16">
-        <h2 className="text-2xl sm:text-3xl font-bold text-center text-green-800 mb-10">
-          How It Works
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <Card className="bg-white border-green-100">
-            <CardContent className="p-6 flex flex-col items-center text-center">
-              <div className="bg-green-100 p-4 rounded-full mb-4">
-                <Camera className="h-8 w-8 text-green-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-green-800 mb-2">Snap a Photo</h3>
-              <p className="text-gray-600">
-                Take a picture of any plant using your camera or upload an existing photo.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white border-green-100">
-            <CardContent className="p-6 flex flex-col items-center text-center">
-              <div className="bg-green-100 p-4 rounded-full mb-4">
-                <Leaf className="h-8 w-8 text-green-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-green-800 mb-2">Get Instant Results</h3>
-              <p className="text-gray-600">
-                Our AI identifies the plant, detects any diseases, and provides detailed information.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white border-green-100">
-            <CardContent className="p-6 flex flex-col items-center text-center">
-              <div className="bg-green-100 p-4 rounded-full mb-4">
-                <MessageSquare className="h-8 w-8 text-green-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-green-800 mb-2">Chat for More Info</h3>
-              <p className="text-gray-600">
-                Ask questions about care, growing conditions, or get location-based suggestions.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      {/* Plant Highlight Links */}
-      <div className="flex flex-col md:flex-row justify-center items-center gap-6 py-7">
-        <img
-          src="/assets/49.webp"
-          alt="Medicinal plants for home"
-          className="w-full max-w-sm md:max-w-md h-auto object-cover rounded-lg shadow-md"
-        />
-        <a
-          href="https://www.ugaoo.com/blogs/gardening-basics/the-best-flowering-plants-for-indian-homes?srsltid=AfmBOorHYwL9RBs_hQSJdHeVCBU3JEn6VYBXV3AvizRt1EWJ9ICNdrnS"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-green-700 hover:underline italic font-bold text-2xl sm:text-3xl text-center"
-        >
-          Know some Medicinal Plants For Home
-        </a>
-      </div>
-
-      <div className="flex flex-col md:flex-row justify-center items-center gap-6 py-6">
-        <img
-          src="/assets/45.webp"
-          alt="Best flowering plants for Indian homes"
-          className="w-full max-w-sm md:max-w-md h-auto object-cover rounded-lg shadow-md"
-        />
-        <a
-          href="https://www.ugaoo.com/blogs/gardening-basics/the-best-flowering-plants-for-indian-homes?srsltid=AfmBOorHYwL9RBs_hQSJdHeVCBU3JEn6VYBXV3AvizRt1EWJ9ICNdrnS"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-green-700 hover:underline italic font-bold text-2xl sm:text-3xl text-center"
-        >
-          Best Flowering Plants for Homes In India
-        </a>
-      </div>
-
-      <div className="flex flex-col md:flex-row justify-center items-center gap-6 py-6">
-        <img
-          src="/assets/2tulsi.jpeg"
-          alt="Most useful plant in India - Tulsi"
-          className="w-full max-w-sm md:max-w-md h-auto object-cover rounded-lg shadow-md"
-        />
-        <a
-          href="https://www.ugaoo.com/blogs/gardening-basics/top-10-most-useful-plants-for-home?srsltid=AfmBOoqk3b53LCeQFlco9GRchUDpcUaISjCbOvG9MJek33rtGQaothFP"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-green-700 italic hover:underline font-bold text-2xl sm:text-3xl text-center"
-        >
-          Read about the most useful Plant in India
-        </a>
-      </div>
-
-      {/* Indian Plants Section */}
-      <section className="my-16 bg-green-50 py-12 px-6 rounded-xl">
-        <h2 className="text-2xl sm:text-3xl font-bold text-center text-green-800 mb-4">
-          Specialized for Indian Plants
-        </h2>
-        <p className="text-center text-gray-600 max-w-3xl mx-auto mb-8">
-          Our AI is trained to recognize plants native to India and provide region-specific growing advice for
-          different Indian climates.
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {["Northern", "Southern", "Eastern", "Western"].map((region) => (
-            <Card key={region} className="bg-white">
-              <CardContent className="p-4">
-                <h3 className="font-semibold text-green-700">{region} India</h3>
-                <p className="text-sm text-gray-600">
-                  Get plant suggestions optimized for {region} Indian growing conditions
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="text-center mb-16">
-        <h2 className="text-2xl sm:text-3xl font-bold text-green-800 mb-4">
-          Ready to Identify Your Plants?
-        </h2>
-        <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-          Start using our AI-powered plant identification tool today. It's free and easy to use!
-        </p>
-        <Link href="/identify">
-          <Button className="bg-green-600 hover:bg-green-700 text-lg px-6 py-6 h-auto">
-            Get Started Now
-          </Button>
-        </Link>
-      </section>
-
-      {/* Krishi Vistar / Farmer Corner */}
-      <div className="py-5">
-        <h2 className="mb-4">
-          <a
-            href="https://krishivistar.gov.in/Home.aspx"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-green-600 hover:underline font-bold text-2xl sm:text-3xl md:text-4xl"
-          >
-            KRISHI VISTAR
-          </a>
-        </h2>
-
-        <div className="flex flex-col-reverse md:flex-row items-center gap-6">
-          <p className="text-gray-700">
-            The next level of agriculture is moving toward Bio and Organic farming. The materials harvested from
-            our own farms should be healthy for our own health. The next generation of cultivation will be
-            completely organic. So get ready for the next level of agricultural inputs. LeafCare BioTech provides
-            Bio and Organic products for the new generation of the agri-community — building a healthy generation
-            for tomorrow, starting today.
-          </p>
-          <img
-            src="/assets/farmercorner1.jpg"
-            alt="Farmer corner"
-            className="w-full md:w-1/3 h-auto object-cover rounded-lg shadow-md flex-shrink-0"
-          />
+        <div className="space-y-4 min-w-0">
+          <h2 className="text-lg sm:text-xl font-semibold text-green-700">
+            Chat with Plant Assistant
+          </h2>
+          <ChatInterface />
         </div>
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg mb-8 break-words">
+          <p className="font-medium">{error}</p>
+          <p className="text-sm">Please try again with a different photo.</p>
+        </div>
+      )}
+
+      {(plantInfo || diseaseInfo) && (
+        <div className="mt-8">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="identify" className="text-xs sm:text-sm">
+                Plant Information
+              </TabsTrigger>
+              <TabsTrigger value="disease" className="text-xs sm:text-sm">
+                Health Analysis
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="identify" className="mt-4">
+              <PlantInfoCard
+                plantInfo={plantInfo}
+                isLoading={isProcessing}
+              />
+            </TabsContent>
+
+            <TabsContent value="disease" className="mt-4">
+              <DiseaseInfoCard
+                diseaseInfo={diseaseInfo}
+                isLoading={isProcessing}
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
+      )}
     </div>
-  );
+  )
 }
