@@ -20,27 +20,27 @@ export default function PlantSuggestions() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!region.trim()) {
       setError("Please enter a region in India")
       return
     }
-    
+
     setIsLoading(true)
     setError(null)
-    
+
     try {
       const response = await fetch(`/api/suggestions?region=${encodeURIComponent(region)}`)
       const data = await response.json()
-      
+
       if (!response.ok) {
         throw new Error(data.error || "Failed to fetch suggestions")
       }
-      
+
       if (!data.success) {
         throw new Error("Failed to get plant suggestions")
       }
-      
+
       setSuggestions(data.data)
     } catch (err) {
       console.error("Error fetching suggestions:", err)
@@ -52,21 +52,23 @@ export default function PlantSuggestions() {
   }
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-green-700">Find Plants for Your Region</h2>
-      
-      <form onSubmit={handleSubmit} className="flex gap-2">
+    <div className="space-y-4 w-full max-w-3xl mx-auto px-4 sm:px-0">
+      <h2 className="text-lg sm:text-xl font-semibold text-green-700">
+        Find Plants for Your Region
+      </h2>
+
+      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
         <Input
           value={region}
           onChange={(e) => setRegion(e.target.value)}
           placeholder="Enter your region in India (e.g., Kerala, Delhi)"
-          className="flex-1"
+          className="flex-1 w-full"
           disabled={isLoading}
         />
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           disabled={isLoading}
-          className="bg-green-600 hover:bg-green-700"
+          className="bg-green-600 hover:bg-green-700 w-full sm:w-auto whitespace-nowrap"
         >
           {isLoading ? (
             <>
@@ -78,23 +80,23 @@ export default function PlantSuggestions() {
           )}
         </Button>
       </form>
-      
+
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded">
+        <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded text-sm">
           {error}
         </div>
       )}
-      
+
       {suggestions.length > 0 && (
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
           {suggestions.map((plant, index) => (
             <Card key={index} className="border-green-100">
               <CardHeader className="pb-2">
-                <CardTitle className="flex items-center text-green-800">
-                  <Leaf className="h-4 w-4 mr-2" />
+                <CardTitle className="flex items-center text-green-800 text-base sm:text-lg break-words">
+                  <Leaf className="h-4 w-4 mr-2 shrink-0" />
                   {plant.name}
                 </CardTitle>
-                <CardDescription className="italic">
+                <CardDescription className="italic break-words">
                   {plant.scientificName}
                 </CardDescription>
               </CardHeader>
